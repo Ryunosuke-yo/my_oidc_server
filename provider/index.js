@@ -3,9 +3,11 @@ const express = require("express");
 const { default: mongoose } = require("mongoose");
 const port = 3000
 const path = require('path');
+const querystring = require('querystring')
 const { connectMongoose, userModel } = require("./db/models/userSchema");
 const { generateAuthCode, issueToken } = require("./oath2/authorize");
 require('dotenv').config()
+const {State} = require("./state")
 
 
 
@@ -13,6 +15,7 @@ const page_url = 'http://localhost:3000'
 
 const app = express()
 const htmlPath = express.static(path.join(__dirname, './html'))
+const parse = querystring.parse
 const login_url = page_url + '/oath2/login'
 app.set('view engine', 'ejs');
 
@@ -34,18 +37,25 @@ app.get("/", (req, res)=>{
 
 
 
-app.get("/oath2/authorize", (req, res)=>{
-    const url = login_url + '?client_id=' + client_id + '&redirect_uri=' + encodeURIComponent(redirect_uri) + '&response_type=' + response_type;
-    res.redirect(url)
-})
+// app.get("/auth", (req, res)=>{
+//     const url = login_url + '?client_id=' + client_id + '&redirect_uri=' + encodeURIComponent(redirect_uri) + '&response_type=' + response_type;
+//     res.redirect(url)
+// })
 
 
-app.get("/oath2/login", (req, res)=>{
-    console.log(req.url)
+
+
+app.get("/auth", (req, res)=>{
+    // console.log(req.url)
     res.render("pages/login")
+    const {state: s} = parse(req.url)
+    console.log(parse(req.url), "url") 
+    app.locals.state = parse(req.url).state
+    app.locals.id = parse(req.url).client_id
+    app.locals.redirect = parse(req.url).redirect_uri
 })
 
-app.get("/oath2/authorize-process", (req, res)=>{
+app.get("/authorize-process", (req, res)=>{
     let userId
     const {name, password} = req.query
 
@@ -55,8 +65,10 @@ app.get("/oath2/authorize-process", (req, res)=>{
         console.log(userId)
         const scope = "openid"
         const code = generateAuthCode(userId, client_id, scope)
-        const url = "/token" + '?code=' + code
-        res.redirect("/success")
+        // res.send(`/success?code=${code}&state=${app.locals.state}`)
+
+        res.redirect(`${app.locals.redirect}?code=${code}&state=${app.locals.state}`)
+        console.log(req.url)
     })
 })
 
@@ -71,6 +83,16 @@ app.post("/token", (req, res)=>{
 })
 
 
+app.get("/userinfo", (req, res)=>{
+    const aceessToken = parse(req.url)
+    res.send({
+        name : "user1",
+        email: "aa@aa.aa",
+        password : "12345"
+    })
+})
+
+
 app.get("/success", (req, res)=>{
     res.render("pages/token_issued")
 })
@@ -78,3 +100,6 @@ app.get("/success", (req, res)=>{
 app.listen(port, ()=>{
     console.log(`listening on ${port}`)
 })
+
+
+
