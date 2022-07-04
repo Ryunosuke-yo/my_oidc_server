@@ -68,12 +68,12 @@ app.get("/authorize-process", (req, res)=>{
         // res.send(`/success?code=${code}&state=${app.locals.state}`)
 
         res.redirect(`${app.locals.redirect}?code=${code}&state=${app.locals.state}`)
-        console.log(req.url)
+        // console.log(req.url)
     })
 })
 
 app.post("/token", (req, res)=>{
-    console.log(issueToken())
+    // console.log(issueToken())
     const grant_type = 'authorization_code'
     // console.log(req.body.data)
     if(grant_type == "authorization_code"){
@@ -83,14 +83,14 @@ app.post("/token", (req, res)=>{
 })
 
 
-app.get("/userinfo", (req, res)=>{
-    const aceessToken = parse(req.url)
-    res.send({
-        name : "user1",
-        email: "aa@aa.aa",
-        password : "12345"
-    })
-})
+// app.get("/userinfo", (req, res)=>{
+//     const aceessToken = parse(req.url)
+//     res.send({
+//         name : "user1",
+//         email: "aa@aa.aa",
+//         password : "12345"
+//     })
+// })
 
 
 app.get("/success", (req, res)=>{

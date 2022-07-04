@@ -22,24 +22,39 @@ app.get("/", (req, res)=>{
 
 app.get('/auth', (req, res)=>{
     const state = crypto.randomBytes(N).toString('base64').substring(0, N)
-    const scope = "profile"
-    // console.log(state)
-    const url = providerUrl + "?response_type=code" + "&client_id=" + client_id + "&redirect_uri=" + redirect_uri + "&scope=" + scope +"&state=" + state
+    const scope = "openid"
+    const encodeRedirect = encodeURIComponent(redirect_uri)
+    const url = providerUrl + "?response_type=code" + "&client_id=" + client_id + "&redirect_uri=" + encodeRedirect + "&scope=" + scope +"&state=" + state
     res.redirect(url)
 })
 
 
 app.get("/redirect_claim_token", async(req, res)=>{
-    const response = await axios.post("http://localhost:3000/token",{
-        state : parse(req.url).state
-    })
-    console.log(response.data)
 
-    // res.redirect("/getinfo")
-    const url = "http://localhost:3000/userinfo"
-    const info =  await axios.get(url)
-    console.log(info.data)
-    res.send(info.data)
+    try {
+        
+        const encoded = Buffer.from(`${client_id}:${client_secret}`).toString('base64')
+        console.log(encoded)
+        const code = parse(req.url).code
+        const redirect = parse(req.url).redirect_uri
+        const encodeUri = encodeURIComponent(redirect)
+        const url_ = "http://localhost:3000/token" + "?grant_type=authorization_code" + "&code=" +  code + "&redirect_uri" + encodeUri
+        const response = await axios.post(url_,{
+            headers : {
+                "Content-type" : "application/x-www-form-urlencoded",
+                "Authorization" : `Basic ${client_secret}`
+            }
+        })
+        // console.log(response.data)
+    
+        // res.redirect("/getinfo")
+        const url = "http://localhost:3000/userinfo"
+        const info =  await axios.get(url)
+        // console.log(info.data)
+        res.send(info.data)
+    } catch (error) {
+        console.log(error)
+    }
 
 })
 
