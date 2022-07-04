@@ -1,4 +1,4 @@
-const generateAuthCode = (user_id, client_id, scopes, redirect_url, expires_at)=>{
+const generateAuthCode = (user_id, client_id, scopes, redirect_url,)=>{
 
     console.log(user_id, client_id, scopes)
     const code = Buffer.from(client_id + ':' + user_id + ':' + scopes, 'ascii').toString('hex');
